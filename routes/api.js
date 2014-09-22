@@ -12,7 +12,6 @@ function randomString(length, chars) {
     if (chars.indexOf('a') > -1) mask += 'abcdefghijklmnopqrstuvwxyz';
     if (chars.indexOf('A') > -1) mask += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     if (chars.indexOf('#') > -1) mask += '0123456789';
-    if (chars.indexOf('!') > -1) mask += '~`!@#$%^&*()_+-={}[]:";\'<>?,./|\\';
     var result = '';
     for (var i = length; i > 0; --i) result += mask[Math.round(Math.random() * (mask.length - 1))];
     return result;
@@ -34,7 +33,7 @@ var getAccessToken = function (req, res) {
             res.json({'result': 'failure'});
         }
         else{
-            token = randomString(6, '#aA!');
+            token = randomString(6, '#aA');
             database.collection('teachers').update({'empid': empid}, {$set: {token: token}}, onUpdate);
         }
     };
@@ -81,13 +80,66 @@ var getClasses = function(req, res) {
     mongoClient.connect(mongoUri, onConnect);
 };
 
-var postAttendance  = function(req, res){
+var postAttendance = function(req, res){
     var cnum = req.param('cnum');
     var date = req.param('date');
     var present = req.param('present');
     var absent = req.param('absent');
-
+    var token = req.param('token');
+    if(!(present instanceof Array)){
+        var presentA = [];
+        presentA.push(present);
+        present = presentA;
+    }
+    if(!(absent instanceof Array)){
+        var absentA = [];
+        absentA.push(absent);
+        absent = absentA;
+    }
+    console.log(cnum+" "+date+" "+token+" "+present+" "+absent+" ");
+    var onUpdate = function(err, result){
+        if(err) {
+            res.json({'result': 'failure'});
+        }
+        else {
+            res.json({'result': 'success'});
+        }
+    };
+    var onClassFind = function(err, result){
+        if(err) {}
+        else{
+            var history = [];
+            console.log(result);
+            if(result.history){
+                history = result.history;
+            }
+            history.push({'date': date, 'present': present, 'absent': absent});
+            console.log(history);
+            var students = result.students;
+            for(var i=0; i<present.length; i++){
+                for(var j=0; j<students.length; j++){
+                    if(present[i] == students[j].regno){
+                        students[j].attended.push(date);
+                    }
+                }
+            }
+            var total = result.total;
+            total = total + 1;
+            database.collection('classes').update({'cnum': cnum}, {$set: {'history': history, 'students': students, 'total': total}}, onUpdate);
+        }
+    };
+    var onConnect = function(err, db){
+        if(err) {}
+        else {
+            database = db;
+            database.collection('classes').findOne({'cnum': cnum}, onClassFind);
+        }
+    };
+    var database;
+    mongoClient.connect(mongoUri, onConnect);
 };
+
 router.post('/getaccesstoken', getAccessToken);
 router.post('/getclasses', getClasses);
+router.post('/postattendance', postAttendance);
 module.exports = router;
