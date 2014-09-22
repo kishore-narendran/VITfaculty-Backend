@@ -2,6 +2,7 @@
  * Created by kishore on 21/9/14.
  */
 var express = require('express');
+var async = require('async');
 var router = express.Router();
 var mongoClient = require('mongodb').MongoClient;
 var mongoUri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/VITacademics';
@@ -51,30 +52,30 @@ var getClasses = function(req, res) {
     var token = req.param('token');
     var database;
     var classes = [];
-    var onFindClass = function(err, items){
+    var onAllClasses = function(err, results) {
         if(err){}
-        else{
-            classes.push(items[0]);
+        else {
+            res.json({'classes': results, 'token': token});
         }
     };
-    var onFind = function(err, items) {
+    var onFindClass = function(cnum, callback){
+        database.collection('classes').findOne({'cnum': cnum}, callback);
+    };
+    var onFind = function(err, item) {
         if(err){}
-        else if(items.length == 0){
-            res.json({'result': 'invalid token'});
+        else if(item){
+            var cnums = item.cnums;
+            async.map(cnums, onFindClass, onAllClasses);
         }
-        else{
-            var cnums = items[0].cnums;
-            for(var i=0; i<cnums.length; i++){
-                var cnum = cnums[i];
-                database.collection('classes').find({'cnum': cnum}).toArray(onFindClass);
-            }
+        else {
+            res.json({'result': 'token invalid'})
         }
     };
     var onConnect = function(err, db){
         if(err){}
         else{
             database = db;
-            db.collection('teachers').find({'token': token}).toArray(onFind);
+            db.collection('teachers').findOne({'token': token}, onFind);
         }
     };
     mongoClient.connect(mongoUri, onConnect);
