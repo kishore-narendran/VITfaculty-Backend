@@ -1,5 +1,5 @@
 /**
- * Created by kishore on 21/9/14.
+ * Created by Kishore Narendran on 21/9/14.
  */
 var express = require('express');
 var async = require('async');
@@ -7,6 +7,11 @@ var router = express.Router();
 var mongoClient = require('mongodb').MongoClient;
 var mongoUri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/VITacademics';
 
+/*
+    The following function generates a random string which
+    will act as a token for all requests coming in from the
+    side
+ */
 function randomString(length, chars) {
     var mask = '';
     if (chars.indexOf('a') > -1) mask += 'abcdefghijklmnopqrstuvwxyz';
@@ -16,6 +21,11 @@ function randomString(length, chars) {
     for (var i = length; i > 0; --i) result += mask[Math.round(Math.random() * (mask.length - 1))];
     return result;
 }
+
+/*
+    The following function is called when a new token is
+    requested for a teacher.
+ */
 
 var getAccessToken = function (req, res) {
     var empid = req.param('empid');
