@@ -35,7 +35,6 @@ var addClass = function (req, res){
     var slot = req.param('slot');
     var venue = req.param('venue');
     var students = [];
-    console.log(regnos);
     for(var i=0; i<regnos.length; i++){
         var student = {'regno': regnos[i], 'attended': []};
         students.push(student);

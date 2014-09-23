@@ -106,7 +106,6 @@ var postAttendance = function(req, res){
         absentA.push(absent);
         absent = absentA;
     }
-    console.log(cnum+" "+date+" "+token+" "+present+" "+absent+" ");
     var onUpdate = function(err, result){
         if(err) {
             res.json({'result': 'failure'});
@@ -119,12 +118,10 @@ var postAttendance = function(req, res){
         if(err) {}
         else{
             var history = [];
-            console.log(result);
             if(result.history){
                 history = result.history;
             }
             history.push({'date': date, 'present': present, 'absent': absent});
-            console.log(history);
             var students = result.students;
             for(var i=0; i<present.length; i++){
                 for(var j=0; j<students.length; j++){
@@ -149,7 +146,34 @@ var postAttendance = function(req, res){
     mongoClient.connect(mongoUri, onConnect);
 };
 
+var getClassAttedanceByDate = function(req, res) {
+    var date = req.param('date');
+    var cnum = req.param('cnum');
+    var onClassFind = function(err, result) {
+        if(err) {}
+        else{
+            var history = result.history;
+            for(var i=0; i<history.length; i++){
+                if(history[i].date == date){
+                    history[i].result = 'success';
+                    res.json(history[i]);
+                }
+                res.json({'result': 'failure'});
+            }
+        }
+    };
+    var onConnect = function(err, db){
+        if(err) {}
+        else{
+            db.collection('classes').findOne({'cnum': cnum}, onClassFind);
+        }
+
+    };
+    mongoClient.connect(mongoUri, onConnect);
+};
+
 router.post('/getaccesstoken', getAccessToken);
 router.post('/getclasses', getClasses);
 router.post('/postattendance', postAttendance);
+router.post('/getclassattendancedate', getClassAttedanceByDate);
 module.exports = router;
