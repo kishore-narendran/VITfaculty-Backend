@@ -146,7 +146,7 @@ var postAttendance = function(req, res){
     mongoClient.connect(mongoUri, onConnect);
 };
 
-var getClassAttedanceByDate = function(req, res) {
+var getClassAttendanceByDate = function(req, res) {
     var date = req.param('date');
     var cnum = req.param('cnum');
     var onClassFind = function(err, result) {
@@ -175,5 +175,5 @@ var getClassAttedanceByDate = function(req, res) {
 router.post('/getaccesstoken', getAccessToken);
 router.post('/getclasses', getClasses);
 router.post('/postattendance', postAttendance);
-router.post('/getclassattendancedate', getClassAttedanceByDate);
+router.post('/getclassattendancedate', getClassAttendanceByDate);
 module.exports = router;
