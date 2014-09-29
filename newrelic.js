@@ -1,5 +1,5 @@
 /*
- *  VITacademics-Faculty
+ *  VITacademics
  *  Copyright (C) 2014  Aneesh Neelam <neelam.aneesh@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -16,14 +16,27 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var express = require('express');
-var router = express.Router();
+var log;
+if (process.env.LOGENTRIES_TOKEN) {
+    var logentries = require('node-logentries');
+    log = logentries.logger({
+                                token: process.env.LOGENTRIES_TOKEN
+                            });
+}
 
+if (process.env.NEWRELIC_APP_NAME && process.env.NEWRELIC_LICENSE) {
+    var app_name = process.env.NEWRELIC_APP_NAME;
+    var license = process.env.NEWRELIC_LICENSE;
+    if (log) {
+        log.info('Using New Relic');
+    }
+    console.log('Using New Relic');
+}
 
-var indexPage = function (req, res) {
-    res.render('index', { });
+exports.config = {
+    app_name: [app_name],
+    license_key: license,
+    logging: {
+        level: 'info'
+    }
 };
-
-router.get('/', indexPage);
-
-module.exports = router;
