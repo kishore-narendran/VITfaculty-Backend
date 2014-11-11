@@ -198,9 +198,170 @@ var getClassAttendanceByDate = function (req, res) {
     mongoClient.connect(mongoUri, onConnect);
 };
 
+var getClassAttendance = function(req, res) {
+    var cnum = req.param('cnum');
+    var onClassFind = function(err, result) {
+        if(err) {}
+        else {
+            var history = result.history;
+            history.result = 'success';
+            res.json({'history': history});
+        }
+    };
+    var onConnect = function(err, db) {
+        if (err) {
+        }
+        else {
+            db.collection('classes').findOne({'cnum': cnum}, onClassFind);
+        }
+    };
+    mongoClient.connect(mongoUri, onConnect);
+};
+
+var getTimeTable = function(req, res) {
+    var mondayTheory = ['A1', 'F1', 'C1', 'E1', 'TD1', 'A2', 'F2', 'C2', 'E2', 'TD2'];
+    var tuesdayTheory = ['B1', 'G1', 'D1', 'TA1', 'TF1', 'B2', 'G2', 'D2', 'TA2', 'TF2'];
+    var wednesdayTheory = ['C1', 'F1', 'E1', 'TB1', 'TG1', 'C2', 'F2', 'E2', 'TB2', 'TG2'];
+    var thursdayTheory = ['D1', 'A1', 'F1', 'C1', 'TE1', 'D2', 'A2', 'F2', 'C2', 'TE2'];
+    var fridayTheory = ['E1', 'B1', 'G1', 'D1', 'TC1', 'E2', 'B2', 'G2', 'D2', 'TC2'];
+    var mondayLab = ['1', '2', '3', '4', '5', '6', '31', '32', '33', '34', '35', '36'];
+    var tuesdayLab = ['7', '8', '9', '10', '11', '12', '37', '38', '39', '40', '41', '42'];
+    var wednesdayLab = ['13', '14', '15', '16', '17', '18', '43', '44', '45', '46', '47', '48'];
+    var thursdayLab = ['19', '20', '21', '22', '23', '24', '49', '50', '51', '52', '53', '54'];
+    var fridayLab = ['25', '26', '27', '28', '29', '30', '55', '56', '57', '58', '59', '60'];
+    var token = req.param('token');
+    var database;
+    var onAllClasses = function (err, results) {
+        if (err) {
+        }
+        else {
+            for(var i = 0; i < results.length; i++){
+                var slot = results[i].slot;
+                var cnum = results[i].cnum;
+                if (slot.indexOf("L") == -1){
+                    if((tempval = mondayTheory.indexOf(slot)) != -1)
+                        mondayTheory[tempval] = cnum;
+                    if((tempval = tuesdayTheory.indexOf(slot)) != -1)
+                        tuesdayTheory[tempval] = cnum;
+                    if((tempval = wednesdayTheory.indexOf(slot)) != -1)
+                        wednesdayTheory[tempval] = cnum;
+                    if((tempval = thursdayTheory.indexOf(slot)) != -1)
+                        thursdayTheory[tempval] = cnum;
+                    if((tempval = fridayTheory.indexOf(slot)) != -1)
+                        fridayTheory[tempval] = cnum;
+                }
+                else{
+                    slot = slot.split("L");
+                    for(var j = 0; j < slot.length ; j++){
+                        slot[j] = slot[j].replace('+', '');
+                        slot[j] = slot[j].trim();
+                        if((tempval = mondayLab.indexOf(slot[j])) != -1)
+                            mondayLab[tempval] = cnum;
+                        if((tempval = tuesdayLab.indexOf(slot[j])) != -1)
+                            tuesdayLab[tempval] = cnum;
+                        if((tempval = wednesdayLab.indexOf(slot[j])) != -1)
+                            wednesdayLab[tempval] = cnum;
+                        if((tempval = thursdayLab.indexOf(slot[j])) != -1)
+                            thursdayLab[tempval] = cnum;
+                        if((tempval = fridayLab.indexOf(slot[j])) != -1)
+                            fridayLab[tempval] = cnum;
+                    }
+                }
+            }
+            var monday = [], tuesday = [], wednesday = [], thursday = [], friday = [];
+            for(var j = 0; j < 12; j++){
+                if(j == 5 || j == 11) {
+                    if(parseInt(mondayLab[j]) >= 1000)
+                        monday.push(mondayLab[j]);
+                    else
+                        monday.push('0');
+                    if(parseInt(tuesdayLab[j]) >= 1000)
+                        tuesday.push(tuesdayLab[j]);
+                    else
+                        tuesday.push('0');
+                    if(parseInt(wednesdayLab[j]) >= 1000)
+                        wednesday.push(wednesdayLab[j]);
+                    else
+                        wednesday.push('0');
+                    if(parseInt(thursdayLab[j]) >= 1000)
+                        thursday.push(thursdayLab[j]);
+                    else
+                        thursday.push('0');
+                    if(parseInt(fridayLab[j]) >= 1000)
+                        friday.push(fridayLab[j]);
+                    else
+                        friday.push('0');
+                }
+                else {
+                    if(parseInt(mondayLab[j]) >= 1000)
+                        monday.push(mondayLab[j]);
+                    else if(parseInt(mondayTheory[j]) >= 1000)
+                        monday.push(mondayTheory[j]);
+                    else
+                        monday.push('0');
+
+                    if(parseInt(tuesdayLab[j]) >= 1000)
+                        tuesday.push(tuesdayLab[j]);
+                    else if(parseInt(tuesdayTheory[j]) >= 1000)
+                        tuesday.push(tuesdayTheory[j]);
+                    else
+                        tuesday.push('0');
+
+                    if(parseInt(wednesdayLab[j]) >= 1000)
+                        wednesday.push(wednesdayLab[j]);
+                    else if(parseInt(wednesdayTheory[j]) >= 1000)
+                        wednesday.push(wednesdayTheory[j]);
+                    else
+                        wednesday.push('0');
+
+                    if(parseInt(thursdayLab[j]) >= 1000)
+                        thursday.push(thursdayLab[j]);
+                    else if(parseInt(thursdayTheory[j]) >= 1000)
+                        thursday.push(thursdayTheory[j]);
+                    else
+                        thursday.push('0');
+
+                    if(parseInt(fridayLab[j]) >= 1000)
+                        friday.push(fridayLab[j]);
+                    else if(parseInt(fridayTheory[j]) >= 1000)
+                        friday.push(fridayTheory[j]);
+                    else
+                        friday.push('0');
+                }
+            }
+            res.json({'monday': monday, 'tuesday': tuesday, 'wednesday': wednesday, 'thursday': thursday, 'friday': friday});
+        }
+    };
+    var onFindClass = function (cnum, callback) {
+        database.collection('classes').findOne({'cnum': cnum}, callback);
+    };
+    var onTokenFound = function (err, item) {
+        if (err) {
+        }
+        else if (item) {
+            var cnums = item.cnums;
+            async.map(cnums, onFindClass, onAllClasses);
+        }
+        else {
+            res.json({'result': 'token invalid'})
+        }
+    };
+    var onConnect = function (err, db) {
+        if (err) {
+        }
+        else {
+            database = db;
+            db.collection('teachers').findOne({'token': token}, onTokenFound);
+        }
+    };
+    mongoClient.connect(mongoUri, onConnect);
+};
+
 router.post('/getaccesstoken', getAccessToken);
 router.post('/getclasses', getClasses);
 router.post('/postattendance', postAttendance);
 router.post('/getclassattendancedate', getClassAttendanceByDate);
+router.post('/getclassattendance', getClassAttendance);
+router.post('/getTimeTable', getTimeTable);
 
 module.exports = router;
