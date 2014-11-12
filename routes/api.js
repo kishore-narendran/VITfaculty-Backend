@@ -453,4 +453,5 @@ router.post('/getclassattendance', getClassAttendance);
 router.post('/getTimeTable', getTimeTable);
 router.post('/postmarks', postMarks);
 router.post('/getmarks', getMarks);
+
 module.exports = router;
