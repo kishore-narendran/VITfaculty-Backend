@@ -58,8 +58,8 @@ app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.png')));
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json()); // Accept application/json
+app.use(bodyParser.urlencoded({extended: true})); // Accept URL encoded data (GET, POST)
 
 var cookieSecret = process.env.COOKIE_SECRET || 'randomsecretstring';
 app.use(cookieParser(cookieSecret, {signed: true}));
@@ -112,6 +112,3 @@ app.use(function (err, req, res, next) {
 });
 
 module.exports = app;
-
-
-//Testing a change
