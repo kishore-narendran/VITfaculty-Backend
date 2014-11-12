@@ -76,6 +76,11 @@ var getAccessToken = function (req, res) {
     mongoClient.connect(mongoUri, onConnect);
 };
 
+/*
+ The following function is to get class details
+ by getting the token number.
+ */
+
 var getClasses = function (req, res) {
     var token = req.param('token');
     var database;
@@ -357,11 +362,95 @@ var getTimeTable = function(req, res) {
     mongoClient.connect(mongoUri, onConnect);
 };
 
+var postMarks = function(req, res) {
+    var marks = req.body.marks;
+    var cnum = req.body.cnum;
+    var exam = req.body.exam;
+    var markstemp = [], database;
+    for(var i = 0; i < marks.length; i++) {
+        markstemp.push(JSON.parse(marks[i]));
+    }
+    marks = markstemp;
+    var onMarksPost = function(err, result) {
+        if(err) {
+            //Replace with appropriate failure response
+        }
+        else {
+            //Replace with appropriate success response
+            res.json(result);
+        }
+    };
+    var onClassFind = function(err, item) {
+        if(err) {}
+        else {
+            var students = item.students;
+            for(var i = 0; i < marks.length; i++) {
+                for(var j = 0; j < students.length; j++) {
+                    if(marks[i].regno == students[j].regno) {
+                        if(exam == 'cat1') students[j].cat1 = marks[i].cat1;
+                        if(exam == 'cat2') students[j].cat2 = marks[i].cat2;
+                        if(exam == 'quiz1') students[j].quiz1 = marks[i].quiz1;
+                        if(exam == 'quiz2') students[j].quiz2 = marks[i].quiz2;
+                        if(exam == 'quiz3') students[j].quiz3 = marks[i].quiz3;
+                        if(exam == 'assignment') students[j].assignment = marks[i].assignment;
+                        if(exam == 'tee') students[j].tee = marks[i].tee;
+                        if(exam == 'lab') students[j].lab = marks[i].lab;
+                    }
+                }
+            }
+            database.collection('classes').update({'cnum': cnum}, {$set: {'students': students}}, onMarksPost);
+        }
+    };
+    var onConnect = function(err, db) {
+        if(err) {}
+        else {
+            database = db;
+            db.collection('classes').findOne({'cnum': cnum}, onClassFind);
+        }
+    };
+    mongoClient.connect(mongoUri, onConnect);
+};
+
+var getMarks = function(req, res) {
+    var cnum = req.body.cnum;
+    var exam = req.body.exam;
+    console.log(cnum);
+    console.log(exam);
+    var onClassFind = function(err, item) {
+        if(err) {}
+        else {
+            var responseStudents = [];
+            var students = item.students;
+            for(var i = 0; i < students.length; i++) {
+                var responseStudent = {'regno': students[i].regno};
+                if(exam == 'cat1') responseStudent.cat1 = students[i].cat1;
+                if(exam == 'cat2') responseStudent.cat2 = students[i].cat2;
+                if(exam == 'quiz1')responseStudent.quiz1 = students[i].quiz1;
+                if(exam == 'quiz2')responseStudent.quiz2 = students[i].quiz2;
+                if(exam == 'quiz3') responseStudent.quiz3 = students[i].quiz3;
+                if(exam == 'assignment') responseStudent.assignment = students[i].assignment;
+                if(exam == 'tee') responseStudent.tee = students[i].tee;
+                if(exam == 'lab') responseStudent.lab = students[i].lab;
+                responseStudents.push(responseStudent);
+            }
+            res.json({"students": responseStudents});
+        }
+    };
+    var onConnect = function(err, db) {
+        if(err) {}
+        else {
+            db.collection('classes').findOne({'cnum': cnum}, onClassFind);
+        }
+    };
+    mongoClient.connect(mongoUri, onConnect);
+};
+
 router.post('/getaccesstoken', getAccessToken);
 router.post('/getclasses', getClasses);
 router.post('/postattendance', postAttendance);
 router.post('/getclassattendancedate', getClassAttendanceByDate);
 router.post('/getclassattendance', getClassAttendance);
 router.post('/getTimeTable', getTimeTable);
-
+router.post('/postmarks', postMarks);
+router.post('/getmarks', getMarks);
 module.exports = router;
