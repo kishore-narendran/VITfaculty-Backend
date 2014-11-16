@@ -73,8 +73,27 @@ var addClass = function (req, res) {
     };
     mongoClient.connect(mongoUri, onConnect);
 };
-
+var addSemester = function (req, res) {
+    var semester = req.body.semester;
+    var year = req.body.year;
+    var startDate = req.body.startdate;
+    var endDate = req.body.enddate;
+    var onInsertSemester = function(err, item) {
+        if(err) {}
+        else {
+            res.json({'result': 'success'});
+        }
+    };
+    var onConnect = function(err, db) {
+        if(err) {}
+        else {
+            db.collection('semesters').insert({'semester': semester+year, 'startdate': startDate, 'enddate': endDate}, onInsertSemester);
+        }
+    };
+    mongoClient.connect(mongoUri, onConnect);
+};
 router.post('/addteacher', addTeacher);
 router.post('/addclass', addClass);
+router.post('/addsemester', addSemester);
 
 module.exports = router;
