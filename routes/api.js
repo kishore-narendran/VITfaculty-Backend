@@ -23,7 +23,13 @@ var router = express.Router();
 
 var mongoUri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/VITacademics';
 
-var randomString = function(length, chars) {
+
+/*
+ The following function generates a random string which
+ will act as a token for all requests coming in from the
+ side
+ */
+function randomString(length, chars) {
     var mask = '';
     if (chars.indexOf('a') > -1) mask += 'abcdefghijklmnopqrstuvwxyz';
     if (chars.indexOf('A') > -1) mask += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -33,41 +39,10 @@ var randomString = function(length, chars) {
     return result;
 }
 
-var checkDateBefore = function (date1, date2) {
-    var year1 = date1.getFullYear();
-    var month1 = date1.getMonth();
-    var date1 = date1.getDate();
-    var year2 = date2.getFullYear();
-    var month2 = date2.getMonth();
-    var date2 = date2.getDate();
-    if(year2 > year1) {return true;}
-    else if(year1 == year2) {
-        if(month1 < month2) {return true;}
-        else if(month1 == month2) {
-            if(date1 <= date2) {return true;}
-            else {return false;}
-        }
-        else {return false;}
-    }
-    else {return false;}
-};
-
-var getDateString = function (datevar) {
-    var year = datevar.getFullYear();
-    var month = datevar.getMonth();
-    var date = datevar.getDate();
-    var stringDate = year.toString();
-    if(month < 10)
-        stringDate = stringDate+"-0"+month.toString();
-    else
-        stringDate = stringDate+"-"+month.toString();
-    if(date < 10)
-        stringDate = stringDate+"-0"+date.toString();
-    else
-        stringDate = stringDate+"-"+date.toString();
-    return stringDate;
-}
-
+/*
+ The following function is called when a new token is
+ requested for a teacher.
+ */
 var getAccessToken = function (req, res) {
     var empid = req.param('empid');
     var passHash = req.param('passwordhash');
@@ -100,6 +75,11 @@ var getAccessToken = function (req, res) {
     };
     mongoClient.connect(mongoUri, onConnect);
 };
+
+/*
+ The following function is to get class details
+ by getting the token number.
+ */
 
 var getClasses = function (req, res) {
     var token = req.param('token');
@@ -465,252 +445,6 @@ var getMarks = function(req, res) {
     mongoClient.connect(mongoUri, onConnect);
 };
 
-var getDates = function(req, res) {
-    var semester = req.body.semester;
-    var year = req.body.year;
-    var startdate = req.body.startdate;
-    var slot = req.body.slot;
-    var onSemesterFind = function(err, item) {
-        if(err) {}
-        else{
-            var dates = [];
-            var enddate = item.enddate;
-            enddate = new Date(enddate);
-            startdate = new Date(startdate);
-            switch(slot) {
-                case "A1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 4)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "A2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 4)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "A1+TA1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 2 || startdate.getDay() == 4)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "A2+TA2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 2 || startdate.getDay() == 4)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "B1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 2 || startdate.getDay() == 5)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "B2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 2 || startdate.getDay() == 5)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "B1+TB1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 2 || startdate.getDay() == 3 || startdate.getDay() == 5)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "B2+TB2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 2 || startdate.getDay() == 3 || startdate.getDay() == 5)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "C1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 3 || startdate.getDay() == 4)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "C2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 3 || startdate.getDay() == 4)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "C1+TC1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 3 || startdate.getDay() == 4 || startdate.getDay() == 5)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "C2+TC2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 3 || startdate.getDay() == 4 || startdate.getDay() == 5)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "D1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 2 || startdate.getDay() == 4 || startdate.getDay() == 5)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "D2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 2 || startdate.getDay() == 4 || startdate.getDay() == 5)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "D1+TD1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 2 || startdate.getDay() == 4 || startdate.getDay() == 5 || startdate.getDay() == 1)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "D2+TD2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 2 || startdate.getDay() == 4 || startdate.getDay() == 5 || startdate.getDay() == 1)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "E1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 3 || startdate.getDay() == 5)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "E2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 3 || startdate.getDay() == 5)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "E1+TE1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 3 || startdate.getDay() == 5 || startdate.getDay() == 4)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "E2+TE2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 3 || startdate.getDay() == 5 || startdate.getDay() == 4)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "F1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 3 || startdate.getDay() == 4)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "F2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 3 || startdate.getDay() == 4)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "F1+TF1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 3 || startdate.getDay() == 4 || startdate.getDay() == 2)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "F2+TF2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 1 || startdate.getDay() == 3 || startdate.getDay() == 4 || startdate.getDay() == 2)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "G1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 2 || startdate.getDay() == 5)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "G2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 2 || startdate.getDay() == 5)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "G1+TG1":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 2 || startdate.getDay() == 5 || startdate.getDay() == 3)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                case "G2+TG2":
-                    while(checkDateBefore(startdate, enddate)) {
-                        if(startdate.getDay() == 2 || startdate.getDay() == 5 || startdate.getDay() == 3)
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-                default:
-                    slot = slot.split("L");
-                    var labdays = {monday: false, tuesday: false, wednesday: false, thursday: false, friday: false}
-                    for(var i = 0; i < slot.length; i++) {
-                        slot[i] = slot[i].replace("+", "");
-                        slot[i] = slot[i].replace(" ", "");
-                        slot[i] = parseInt(slot[i]);
-                        if((slot[i] >= 1 && slot[i] <= 6) || (slot[i] >= 31 && slot[i] <= 36))
-                            labdays.monday = true;
-                        else if((slot[i] >= 7 && slot[i] <= 12) || (slot[i] >= 37 && slot[i] <= 42))
-                            labdays.tuesday = true;
-                        else if((slot[i] >= 13 && slot[i] <= 18) || (slot[i] >= 33 && slot[i] <= 48))
-                            labdays.wednesday = true;
-                        else if((slot[i] >= 19 && slot[i] <= 24) || (slot[i] >= 49 && slot[i] <= 54))
-                            labdays.thursday = true;
-                        else if((slot[i] >= 25 && slot[i] <= 30) || (slot[i] >= 55 && slot[i] <= 60))
-                            labdays.friday = true;
-                    }
-                    while(checkDateBefore(startdate, enddate)) {
-                        if((startdate.getDay() == 1 && labdays.monday) || (startdate.getDay() == 2 && labdays.tuesday) || (startdate.getDay() == 3 && labdays.wednesday) || (startdate.getDay() == 4 && labdays.thursday) || (startdate.getDay() == 5 && labdays.friday))
-                            dates.push(getDateString(startdate));
-                        startdate.setDate(startdate.getDate() + 1);
-                    }
-                    break;
-            }
-            res.json({"dates": dates});
-        }
-    };
-    var onConnect = function(err, db) {
-        if(err) {}
-        else {
-            db.collection('semesters').findOne({'semester': semester+year}, onSemesterFind);
-        }
-    };
-    mongoClient.connect(mongoUri, onConnect);
-};
-
 router.post('/getaccesstoken', getAccessToken);
 router.post('/getclasses', getClasses);
 router.post('/postattendance', postAttendance);
@@ -719,5 +453,4 @@ router.post('/getclassattendance', getClassAttendance);
 router.post('/getTimeTable', getTimeTable);
 router.post('/postmarks', postMarks);
 router.post('/getmarks', getMarks);
-router.post('/getdates', getDates);
 module.exports = router;
