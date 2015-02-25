@@ -31,7 +31,6 @@ if (process.env.LOGENTRIES_TOKEN) {
                             });
 }
 
-var debug = require('debug')('VITacademics-Faculty');
 var path = require('path');
 
 var app = require(path.join(__dirname, '..', 'app'));
@@ -39,18 +38,19 @@ var app = require(path.join(__dirname, '..', 'app'));
 app.set('port', process.env.PORT || 3000);
 
 var onBind = function () {
-    var mongoUri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/VITacademics';
+  var config = {
+        port: process.env.PORT || 3000,
+        MongoDB_Host: process.env.MONGODB_HOST || 'localhost',
+        MongoDB_Port: process.env.MONGODB_PORT || '27017',
+        MongoDB_Database: process.env.MONGODB_DATABASE || 'VITacademics',
+        MongoDB_Username: process.env.MONGODB_USERNAME || '',
+        MongoDB_Password: process.env.MONGODB_PASSWORD || '',
+        NewRelic: process.env.NEWRELIC_APP_NAME && process.env.NEWRELIC_LICENSE ? true : false
+    };
     if (log) {
-        log.log('info', {MongoUri: mongoUri, Port: server.address().port});
-        if (process.env.HOSTNAME) {
-            log.log('info', {Application: process.env.HOSTNAME});
-        }
+        log.log('info', config);
     }
-    debug('Node.js Express server listening on port ' + server.address().port);
-    debug('Using MongoDB: ' + mongoUri);
-    if (process.env.HOSTNAME) {
-        debug(process.env.HOSTNAME);
-    }
+    console.log('Node.js Express Server started, Config: ' + JSON.stringify(config));
 };
 
 var server = app.listen(app.get('port'), onBind);

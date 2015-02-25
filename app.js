@@ -22,6 +22,7 @@ var bodyParser = require('body-parser');
 var express = require('express');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
+var mongodb = require('express-mongo-db');
 var path = require('path');
 
 var newrelic;
@@ -63,6 +64,34 @@ app.use(bodyParser.urlencoded({extended: true})); // Accept URL encoded data (GE
 
 var cookieSecret = process.env.COOKIE_SECRET || 'randomsecretstring';
 app.use(cookieParser(cookieSecret, {signed: true}));
+
+// MongoDB
+var mongodbOptions = {
+    hosts: [{
+        host: process.env.MONGODB_HOST || '127.0.0.1',
+        port: process.env.MONGODB_PORT || '27017'
+    }],
+    database: process.env.MONGODB_DATABASE || 'VITacademics',
+    username: process.env.MONGODB_USERNAME,
+    password: process.env.MONGODB_PASSWORD,
+    options: {
+        db: {
+            native_parser: true,
+            recordQueryStats: true,
+            retryMiliSeconds: 500,
+            numberOfRetries: 10
+        },
+        server: {
+            socketOptions: {
+                keepAlive: 1,
+                connectTimeoutMS: 10000
+            },
+            auto_reconnect: true,
+            poolSize: 50
+        }
+    }
+};
+app.use(mongodb(require('mongodb'), mongodbOptions));
 
 app.use('/', routes);
 app.use('/api', api);

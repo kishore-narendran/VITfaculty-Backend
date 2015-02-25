@@ -18,10 +18,7 @@
 
 var async = require('async');
 var express = require('express');
-var mongoClient = require('mongodb').MongoClient;
 var router = express.Router();
-
-var mongoUri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/VITacademics';
 
 var randomString = function(length, chars) {
     var mask = '';
@@ -71,7 +68,7 @@ var getDateString = function (datevar) {
 var getAccessToken = function (req, res) {
     var empid = req.param('empid');
     var passHash = req.param('passwordhash');
-    var database, token;
+    var token;
     var onUpdate = function (err, result) {
         if (err) {
         }
@@ -87,23 +84,15 @@ var getAccessToken = function (req, res) {
         }
         else {
             token = randomString(6, '#aA');
-            database.collection('teachers').update({'empid': empid}, {$set: {token: token}}, onUpdate);
+            req.db.collection('teachers').update({'empid': empid}, {$set: {token: token}}, onUpdate);
         }
     };
-    var onConnect = function (err, db) {
-        if (err) {
-        }
-        else {
-            database = db;
-            db.collection('teachers').find({'empid': empid, 'passwordhash': passHash}).toArray(onFind);
-        }
-    };
-    mongoClient.connect(mongoUri, onConnect);
+    req.db.collection('teachers').find({'empid': empid, 'passwordhash': passHash}).toArray(onFind);
 };
 
 var getClasses = function (req, res) {
     var token = req.param('token');
-    var database;
+    var req.db;
     var classes = [];
     var onAllClasses = function (err, results) {
         if (err) {
@@ -113,7 +102,7 @@ var getClasses = function (req, res) {
         }
     };
     var onFindClass = function (cnum, callback) {
-        database.collection('classes').findOne({'cnum': cnum}, callback);
+        req.db.collection('classes').findOne({'cnum': cnum}, callback);
     };
     var onFind = function (err, item) {
         if (err) {
@@ -126,15 +115,7 @@ var getClasses = function (req, res) {
             res.json({'result': 'token invalid'})
         }
     };
-    var onConnect = function (err, db) {
-        if (err) {
-        }
-        else {
-            database = db;
-            db.collection('teachers').findOne({'token': token}, onFind);
-        }
-    };
-    mongoClient.connect(mongoUri, onConnect);
+    req.db.collection('teachers').findOne({'token': token}, onFind);
 };
 
 var postAttendance = function (req, res) {
@@ -180,19 +161,10 @@ var postAttendance = function (req, res) {
             }
             var total = result.total;
             total = total + 1;
-            database.collection('classes').update({'cnum': cnum}, {$set: {'history': history, 'students': students, 'total': total}}, onUpdate);
+            req.db.collection('classes').update({'cnum': cnum}, {$set: {'history': history, 'students': students, 'total': total}}, onUpdate);
         }
     };
-    var onConnect = function (err, db) {
-        if (err) {
-        }
-        else {
-            database = db;
-            database.collection('classes').findOne({'cnum': cnum}, onClassFind);
-        }
-    };
-    var database;
-    mongoClient.connect(mongoUri, onConnect);
+    req.db.collection('classes').findOne({'cnum': cnum}, onClassFind);
 };
 
 var getClassAttendanceByDate = function (req, res) {
@@ -212,15 +184,7 @@ var getClassAttendanceByDate = function (req, res) {
             }
         }
     };
-    var onConnect = function (err, db) {
-        if (err) {
-        }
-        else {
-            db.collection('classes').findOne({'cnum': cnum}, onClassFind);
-        }
-
-    };
-    mongoClient.connect(mongoUri, onConnect);
+    req.db.collection('classes').findOne({'cnum': cnum}, onClassFind);
 };
 
 var getClassAttendance = function(req, res) {
@@ -233,14 +197,7 @@ var getClassAttendance = function(req, res) {
             res.json({'history': history});
         }
     };
-    var onConnect = function(err, db) {
-        if (err) {
-        }
-        else {
-            db.collection('classes').findOne({'cnum': cnum}, onClassFind);
-        }
-    };
-    mongoClient.connect(mongoUri, onConnect);
+    req.db.collection('classes').findOne({'cnum': cnum}, onClassFind);
 };
 
 var getTimeTable = function(req, res) {
@@ -255,7 +212,6 @@ var getTimeTable = function(req, res) {
     var thursdayLab = ['19', '20', '21', '22', '23', '24', '49', '50', '51', '52', '53', '54'];
     var fridayLab = ['25', '26', '27', '28', '29', '30', '55', '56', '57', '58', '59', '60'];
     var token = req.param('token');
-    var database;
     var onAllClasses = function (err, results) {
         if (err) {
         }
@@ -358,7 +314,7 @@ var getTimeTable = function(req, res) {
         }
     };
     var onFindClass = function (cnum, callback) {
-        database.collection('classes').findOne({'cnum': cnum}, callback);
+        req.db.collection('classes').findOne({'cnum': cnum}, callback);
     };
     var onTokenFound = function (err, item) {
         if (err) {
@@ -371,22 +327,14 @@ var getTimeTable = function(req, res) {
             res.json({'result': 'token invalid'})
         }
     };
-    var onConnect = function (err, db) {
-        if (err) {
-        }
-        else {
-            database = db;
-            db.collection('teachers').findOne({'token': token}, onTokenFound);
-        }
-    };
-    mongoClient.connect(mongoUri, onConnect);
+    req.db.collection('teachers').findOne({'token': token}, onTokenFound);
 };
 
 var postMarks = function(req, res) {
     var marks = req.body.marks;
     var cnum = req.body.cnum;
     var exam = req.body.exam;
-    var markstemp = [], database;
+    var markstemp = [];
     for(var i = 0; i < marks.length; i++) {
         markstemp.push(JSON.parse(marks[i]));
     }
@@ -418,17 +366,10 @@ var postMarks = function(req, res) {
                     }
                 }
             }
-            database.collection('classes').update({'cnum': cnum}, {$set: {'students': students}}, onMarksPost);
+            req.db.collection('classes').update({'cnum': cnum}, {$set: {'students': students}}, onMarksPost);
         }
     };
-    var onConnect = function(err, db) {
-        if(err) {}
-        else {
-            database = db;
-            db.collection('classes').findOne({'cnum': cnum}, onClassFind);
-        }
-    };
-    mongoClient.connect(mongoUri, onConnect);
+    req.db.collection('classes').findOne({'cnum': cnum}, onClassFind);
 };
 
 var getMarks = function(req, res) {
@@ -456,13 +397,7 @@ var getMarks = function(req, res) {
             res.json({"students": responseStudents});
         }
     };
-    var onConnect = function(err, db) {
-        if(err) {}
-        else {
-            db.collection('classes').findOne({'cnum': cnum}, onClassFind);
-        }
-    };
-    mongoClient.connect(mongoUri, onConnect);
+    req.db.collection('classes').findOne({'cnum': cnum}, onClassFind);
 };
 
 var getDates = function(req, res) {
@@ -702,13 +637,7 @@ var getDates = function(req, res) {
             res.json({"dates": dates});
         }
     };
-    var onConnect = function(err, db) {
-        if(err) {}
-        else {
-            db.collection('semesters').findOne({'semester': semester+year}, onSemesterFind);
-        }
-    };
-    mongoClient.connect(mongoUri, onConnect);
+    req.db.collection('semesters').findOne({'semester': semester+year}, onSemesterFind);
 };
 
 router.post('/getaccesstoken', getAccessToken);

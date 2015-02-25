@@ -17,10 +17,7 @@
  */
 
 var express = require('express');
-var mongoClient = require('mongodb').MongoClient;
 var router = express.Router();
-
-var mongoUri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/VITacademics';
 
 var addTeacher = function (req, res) {
     var empid = req.param('empid');
@@ -33,14 +30,7 @@ var addTeacher = function (req, res) {
             res.json({'result': "success"});
         }
     };
-    var onConnect = function (err, db) {
-        if (err) {
-        }
-        else {
-            db.collection('teachers').insert({'empid': empid, 'passwordhash': passHash, 'cnums': cnums}, onInsert);
-        }
-    };
-    mongoClient.connect(mongoUri, onConnect);
+    req.db.collection('teachers').insert({'empid': empid, 'passwordhash': passHash, 'cnums': cnums}, onInsert);
 };
 
 var addClass = function (req, res) {
@@ -64,14 +54,7 @@ var addClass = function (req, res) {
             res.json({'result': 'success'});
         }
     };
-    var onConnect = function (err, db) {
-        if (err) {
-        }
-        else {
-            db.collection('classes').insert({'cnum': cnum, 'students': students, 'name': name, 'code': code, 'slot': slot, 'venue': venue, 'total': 0}, onInsert);
-        }
-    };
-    mongoClient.connect(mongoUri, onConnect);
+    req.db.collection('classes').insert({'cnum': cnum, 'students': students, 'name': name, 'code': code, 'slot': slot, 'venue': venue, 'total': 0}, onInsert);
 };
 var addSemester = function (req, res) {
     var semester = req.body.semester;
@@ -84,13 +67,7 @@ var addSemester = function (req, res) {
             res.json({'result': 'success'});
         }
     };
-    var onConnect = function(err, db) {
-        if(err) {}
-        else {
-            db.collection('semesters').insert({'semester': semester+year, 'startdate': startDate, 'enddate': endDate}, onInsertSemester);
-        }
-    };
-    mongoClient.connect(mongoUri, onConnect);
+    req.db.collection('semesters').insert({'semester': semester+year, 'startdate': startDate, 'enddate': endDate}, onInsertSemester);
 };
 router.post('/addteacher', addTeacher);
 router.post('/addclass', addClass);
