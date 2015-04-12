@@ -18,7 +18,9 @@
 
 var async = require('async');
 var express = require('express');
+var path = require('path');
 var router = express.Router();
+var status = require(path.join(__dirname, '..', 'status'));
 
 var randomString = function(length, chars) {
     var mask = '';
@@ -66,21 +68,22 @@ var getDateString = function (datevar) {
 }
 
 var getAccessToken = function (req, res) {
-    var empid = req.param('empid');
-    var passHash = req.param('passwordhash');
+    var empid = req.body.empid;
+    var passHash = req.body.passwordhash;
     var token;
     var onUpdate = function (err, result) {
         if (err) {
+            res.json({status: status.failure})
         }
         else {
-            res.json({'result': 'success', 'token': token});
+            res.json({result: status.success, token: token});
         }
     };
     var onFind = function (err, items) {
         if (err) {
         }
         else if (items.length == 0) {
-            res.json({'result': 'failure'});
+            res.json({result: status.incorrectCredentials});
         }
         else {
             token = randomString(6, '#aA');
@@ -91,14 +94,14 @@ var getAccessToken = function (req, res) {
 };
 
 var getClasses = function (req, res) {
-    var token = req.param('token');
-    var req.db;
+    var token = req.body.token;
     var classes = [];
     var onAllClasses = function (err, results) {
         if (err) {
+            res.json({status: status.failure})
         }
         else {
-            res.json({'classes': results, 'token': token});
+            res.json({status: status.success, classes: results});
         }
     };
     var onFindClass = function (cnum, callback) {
@@ -106,13 +109,14 @@ var getClasses = function (req, res) {
     };
     var onFind = function (err, item) {
         if (err) {
+            res.json({status: status.failure})
         }
         else if (item) {
             var cnums = item.cnums;
             async.map(cnums, onFindClass, onAllClasses);
         }
         else {
-            res.json({'result': 'token invalid'})
+            res.json({status: status.invalidToken})
         }
     };
     req.db.collection('teachers').findOne({'token': token}, onFind);

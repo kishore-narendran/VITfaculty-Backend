@@ -18,16 +18,20 @@
 
 var express = require('express');
 var router = express.Router();
+var path = require('path');
+var status = require(path.join(__dirname, '..', 'status'));
+
 
 var addTeacher = function (req, res) {
-    var empid = req.param('empid');
-    var passHash = req.param('passwordhash');
-    var cnums = req.param('cnum');
+    var empid = req.body.empid;
+    var passHash = req.body.passwordhash;
+    var cnums = req.body.cnum;
     var onInsert = function (err, records) {
         if (err) {
+            res.json({result: status.failure})
         }
         else {
-            res.json({'result': "success"});
+            res.json({result: status.success});
         }
     };
     req.db.collection('teachers').insert({'empid': empid, 'passwordhash': passHash, 'cnums': cnums}, onInsert);
@@ -36,12 +40,12 @@ var addTeacher = function (req, res) {
 var addClass = function (req, res) {
 
     //Need to validate for the value of each class i.e. If lab then 2 if theory then 1
-    var regnos = req.param('regno');
-    var cnum = req.param('cnum');
-    var name = req.param('name');
-    var code = req.param('code');
-    var slot = req.param('slot');
-    var venue = req.param('venue');
+    var regnos = req.body.regno;
+    var cnum = req.body.cnum;
+    var name = req.body.name;
+    var code = req.body.code;
+    var slot = req.body.slot;
+    var venue = req.body.venue;
     var students = [];
     for (var i = 0; i < regnos.length; i++) {
         var student = {'regno': regnos[i], 'attended': []};
