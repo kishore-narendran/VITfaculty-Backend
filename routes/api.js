@@ -123,11 +123,11 @@ var getClasses = function (req, res) {
 };
 
 var postAttendance = function (req, res) {
-    var cnum = req.param('cnum');
-    var date = req.param('date');
-    var present = req.param('present');
-    var absent = req.param('absent');
-    var token = req.param('token');
+    var cnum = req.body.cnum;
+    var date = req.body.date;
+    var present = req.body.present;
+    var absent = req.body.absent;
+    var token = req.body.token;
     if (!(present instanceof Array)) {
         var presentA = [];
         presentA.push(present);
@@ -140,14 +140,15 @@ var postAttendance = function (req, res) {
     }
     var onUpdate = function (err, result) {
         if (err) {
-            res.json({'result': 'failure'});
+            res.json({result: status.failure});
         }
         else {
-            res.json({'result': 'success'});
+            res.json({result: status.success});
         }
     };
     var onClassFind = function (err, result) {
         if (err) {
+            res.json({result: status.failure});
         }
         else {
             var history = [];
@@ -172,19 +173,24 @@ var postAttendance = function (req, res) {
 };
 
 var getClassAttendanceByDate = function (req, res) {
-    var date = req.param('date');
-    var cnum = req.param('cnum');
+    var date = req.body.date;
+    var cnum = req.body.cnum;
     var onClassFind = function (err, result) {
         if (err) {
+            res.json({status: status.failure});
         }
         else {
             var history = result.history;
-            for (var i = 0; i < history.length; i++) {
+            var i;
+            for (i = 0; i < history.length; i++) {
                 if (history[i].date == date) {
-                    history[i].result = 'success';
+                    history[i].result = status.success;
                     res.json(history[i]);
+                    break;
                 }
-                res.json({'result': 'failure'});
+            }
+            if(i == history.length) {
+              res.json({result: status.failure});
             }
         }
     };
@@ -192,13 +198,15 @@ var getClassAttendanceByDate = function (req, res) {
 };
 
 var getClassAttendance = function(req, res) {
-    var cnum = req.param('cnum');
+    var cnum = req.body.cnum;
     var onClassFind = function(err, result) {
-        if(err) {}
+        if(err) {
+            res.json({result: status.failure});
+        }
         else {
             var history = result.history;
             history.result = 'success';
-            res.json({'history': history});
+            res.json({result: result.success, history: history});
         }
     };
     req.db.collection('classes').findOne({'cnum': cnum}, onClassFind);
@@ -215,9 +223,10 @@ var getTimeTable = function(req, res) {
     var wednesdayLab = ['13', '14', '15', '16', '17', '18', '43', '44', '45', '46', '47', '48'];
     var thursdayLab = ['19', '20', '21', '22', '23', '24', '49', '50', '51', '52', '53', '54'];
     var fridayLab = ['25', '26', '27', '28', '29', '30', '55', '56', '57', '58', '59', '60'];
-    var token = req.param('token');
+    var token = req.body.token;
     var onAllClasses = function (err, results) {
         if (err) {
+            res.json({result: status.failure});
         }
         else {
             for(var i = 0; i < results.length; i++){
@@ -314,7 +323,7 @@ var getTimeTable = function(req, res) {
                         friday.push('0');
                 }
             }
-            res.json({'monday': monday, 'tuesday': tuesday, 'wednesday': wednesday, 'thursday': thursday, 'friday': friday});
+            res.json({result: status.success, monday: monday, tuesday: tuesday, wednesday: wednesday, thursday: thursday, friday: friday});
         }
     };
     var onFindClass = function (cnum, callback) {
@@ -322,13 +331,14 @@ var getTimeTable = function(req, res) {
     };
     var onTokenFound = function (err, item) {
         if (err) {
+            res.json({result: status.success})
         }
         else if (item) {
             var cnums = item.cnums;
             async.map(cnums, onFindClass, onAllClasses);
         }
         else {
-            res.json({'result': 'token invalid'})
+            res.json({result: status.invalidToken})
         }
     };
     req.db.collection('teachers').findOne({'token': token}, onTokenFound);

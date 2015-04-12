@@ -53,9 +53,10 @@ var addClass = function (req, res) {
     }
     var onInsert = function (err, record) {
         if (err) {
+            res.json({result: status.failure})
         }
         else {
-            res.json({'result': 'success'});
+            res.json({result: status.success});
         }
     };
     req.db.collection('classes').insert({'cnum': cnum, 'students': students, 'name': name, 'code': code, 'slot': slot, 'venue': venue, 'total': 0}, onInsert);
@@ -67,7 +68,7 @@ var addSemester = function (req, res) {
     var endDate = req.body.enddate;
     var onInsertSemester = function(err, item) {
         if(err) {}
-        else {
+        else {cos
             res.json({'result': 'success'});
         }
     };
