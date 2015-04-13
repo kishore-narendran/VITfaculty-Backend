@@ -39,14 +39,14 @@ var addTeacher = function (req, res) {
 };
 
 var addClass = function (req, res) {
-
-    //Need to validate for the value of each class i.e. If lab then 2 if theory then 1
+    var semester = req.body.semester;
     var regnos = req.body.regno;
     var cnum = req.body.cnum;
     var name = req.body.name;
     var code = req.body.code;
     var slot = req.body.slot;
     var venue = req.body.venue;
+    var units = (slot.split("L").length - 1) != 0 ? (slot.split("L").length - 1) : 1;
     var students = [];
     for (var i = 0; i < regnos.length; i++) {
         var student = {'regno': regnos[i], 'attended': []};
@@ -54,17 +54,17 @@ var addClass = function (req, res) {
     }
     var onInsert = function (err, record) {
         if (err) {
-            res.json({result: status.failure})
+            res.json({result: status.failure});
         }
         else {
             res.json({result: status.success});
         }
     };
-    req.db.collection('classes').insert({'cnum': cnum, 'students': students, 'name': name, 'code': code, 'slot': slot, 'venue': venue, 'total': 0}, onInsert);
+    //req.db.collection('classes').insert({'cnum': cnum, 'students': students, 'name': name, 'code': code, 'slot': slot, 'venue': venue, 'total': 0}, onInsert);
 };
 var addSemester = function (req, res) {
     var semester = req.body.semester;
-    var year = req.body.year;
+    var noClassDates = req.body.non_instructional_dates;
     var startDate = req.body.startdate;
     var endDate = req.body.enddate;
     var onInsertSemester = function(err, item) {
