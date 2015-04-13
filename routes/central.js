@@ -41,14 +41,44 @@ var addTeacher = function (req, res) {
 
 var addClass = function (req, res) {
     var semester = req.body.semester;
-    var regnos = req.body.regno;
+    var regnos = req.body.regnos;
     var cnum = req.body.cnum;
     var name = req.body.name;
     var code = req.body.code;
     var slot = req.body.slot;
     var venue = req.body.venue;
-    var units = (slot.split("L").length - 1) != 0 ? (slot.split("L").length - 1) : 1;
+    var type = req.body.type;
+    var units;
     var students = [];
+    var days = [];
+    var classDays = [];
+    if(type === "Theory Only" || type === "Embedded Theory") {
+        units = 1;
+        days = slots[slot];
+    }
+    else if(type === "Lab Only" || type === "Embedded Lab") {
+        units = slot.split('L').length - 1;
+        var re = /\d+/g;
+        var labSlots = slot.match(re);
+        for(var i in labSlots) {
+            labSlot = parseInt(i);
+            if(((labSlot >= 1 && labSlot <= 6) || (labSlot >= 31 && labSlot <= 36)) && days.indexOf('monday') == -1) {
+                days.push('monday');
+            }
+            else if(((labSlot >= 7 && labSlot <= 12) || (labSlot >= 37 && labSlot <= 42)) && days.indexOf('tuesday') == -1) {
+                days.push('tuesday');
+            }
+            else if(((labSlot >= 13 && labSlot <= 18) || (labSlot >= 43 && labSlot <= 48)) && days.indexOf('wednesday') == -1) {
+                days.push('wednesday');
+            }
+            else if(((labSlot >= 19 && labSlot <= 24) || (labSlot >= 49 && labSlot <= 54)) && days.indexOf('thursday') == -1) {
+                days.push('thursday');
+            }
+            else if(((labSlot >= 25 && labSlot <= 30) || (labSlot >= 55 && labSlot <= 60)) && days.indexOf('friday') == -1) {
+                days.push('friday');
+            }
+        }
+    }
     for (var i = 0; i < regnos.length; i++) {
         var student = {'regno': regnos[i], 'attended': []};
         students.push(student);
@@ -61,7 +91,30 @@ var addClass = function (req, res) {
             res.json({result: status.success});
         }
     };
-    //req.db.collection('classes').insert({'cnum': cnum, 'students': students, 'name': name, 'code': code, 'slot': slot, 'venue': venue, 'total': 0}, onInsert);
+    var onSemesterFind = function(err, result) {
+        if(err) {
+            res.json({result: status.failure});
+        }
+        else {
+            var classDates = result.classdates;
+            for(var i = 0; i < days.length; i++) {
+                day = days[i];
+                classDays.push.apply(classDays, classDates[day]);
+            }
+            for(var i = 0; i < classDays.length; i++) {
+              for(var j = 0; j < classDays.length - 1 - i; j++) {
+                if(moment(classDays[j]).diff(moment(classDays[j+1])) > 0) {
+                  var temp = classDays[j];
+                  classDays[j] = classDays[j+1];
+                  classDays[j+1] = temp;
+                }
+              }
+            }
+            req.db.collection('classes').insert({cnum: cnum, students: students, name: name, code: code, slot: slot, venue: venue, units: units, classdates: classDays, type: type, total: 0}, onInsert);
+        }
+    }
+    req.db.collection('semesters').findOne({semester: semester}, onSemesterFind);
+
 };
 var addSemester = function (req, res) {
     var semester = req.body.semester;
@@ -111,7 +164,7 @@ var addSemester = function (req, res) {
         if(err) {
             res.json({result: status.failure});
         }
-        else {cos
+        else {
             res.json({result: status.success});
         }
     };
