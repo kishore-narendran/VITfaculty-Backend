@@ -62,6 +62,33 @@ var getAccessToken = function(req, res) {
     req.db.collection('teachers').findOne({employee_id: employeeID, password_hash: passwordHash}, onFind);
 };
 
+var getClasses = function(req, res) {
+    var token = req.body.token;
+    var onComplete = function(err, results) {
+        if(err) {
+            res.json({result: status.failure});
+        }
+        else {
+            res.json({result: status.success, classes: results});
+        }
+    }
+    var onFindClass = function (classNumber, callback) {
+        req.db.collection('classes').findOne({class_number: classNumber}, callback);
+    }
+    var onFind = function(err, data) {
+        if(err) {
+            res.json({result: status.failure});
+        }
+        else if(data == null) {
+            res.json({result: status.invalidToken});
+        }
+        else {
+            classNumbers = data.class_numbers;
+            async.map(classNumbers, onFindClass, onComplete);
+        }
+    }
+    req.db.collection('teachers').findOne({token: token}, onFind);
+}
 router.post('/getaccesstoken', getAccessToken);
-
+router.post('/getclasses', getClasses);
 module.exports = router;
