@@ -1,5 +1,5 @@
 /*
- *  VITacademics-Faculty
+ *  VITfaculty
  *  Copyright (C) 2014  Aneesh Neelam <neelam.aneesh@gmail.com>
  *  Copyright (C) 2014  Kishore Narendran <kishore.narendran09@gmail.com>
  *
@@ -51,7 +51,7 @@ if (newrelic) {
 var loggerLevel = process.env.LOGGER_LEVEL || 'dev';
 app.use(logger(loggerLevel));
 
-app.set('title', 'VITacademics-Faculty');
+app.set('title', 'VITfaculty');
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(favicon(path.join(__dirname, 'public', 'images', 'favicon.png')));
 
@@ -71,7 +71,7 @@ var mongodbOptions = {
         host: process.env.MONGODB_HOST || '127.0.0.1',
         port: process.env.MONGODB_PORT || '27017'
     }],
-    database: process.env.MONGODB_DATABASE || 'VITacademics',
+    database: process.env.MONGODB_DATABASE || 'VITfaculty',
     username: process.env.MONGODB_USERNAME,
     password: process.env.MONGODB_PASSWORD,
     options: {

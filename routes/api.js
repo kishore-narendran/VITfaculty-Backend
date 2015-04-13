@@ -1,5 +1,5 @@
 /*
- *  VITacademics-Faculty
+ *  VITfaculty
  *  Copyright (C) 2014  Kishore Narendran <kishore.narendran09@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -19,8 +19,11 @@
 var async = require('async');
 var express = require('express');
 var path = require('path');
-var router = express.Router();
+
 var status = require(path.join(__dirname, '..', 'status'));
+
+var router = express.Router();
+
 
 var randomString = function(length, chars) {
     var mask = '';

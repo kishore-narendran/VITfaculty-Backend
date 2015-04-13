@@ -1,5 +1,5 @@
 /*
- *  VITacademics-Faculty
+ *  VITfaculty
  *  Copyright (C) 2014  Kishore Narendran <kishore.narendran09@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -17,9 +17,10 @@
  */
 
 var express = require('express');
-var router = express.Router();
 var path = require('path');
 var status = require(path.join(__dirname, '..', 'status'));
+
+var router = express.Router();
 
 
 var addTeacher = function (req, res) {

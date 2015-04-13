@@ -1,5 +1,5 @@
 /*
- *  VITacademics
+ *  VITfaculty
  *  Copyright (C) 2014  Aneesh Neelam <neelam.aneesh@gmail.com>
  *
  *  This program is free software: you can redistribute it and/or modify
