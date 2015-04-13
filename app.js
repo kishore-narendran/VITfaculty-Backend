@@ -41,6 +41,7 @@ if (process.env.LOGENTRIES_TOKEN) {
 var routes = require(path.join(__dirname, 'routes', 'index'));
 var central = require(path.join(__dirname, 'routes', 'central'));
 var apiCentral = require(path.join(__dirname, 'routes', 'api-central'));
+var apiClientFaculty = require(path.join(__dirname, 'routes', 'api-client-faculty'));
 var api = require(path.join(__dirname, 'routes', 'api'));
 
 var app = express();
@@ -96,8 +97,9 @@ app.use(mongodb(require('mongodb'), mongodbOptions));
 
 app.use('/', routes);
 app.use('/api/central', apiCentral);
-app.use('/api', api);
-app.use('/central', central);
+app.use('/api/client/faculty', apiClientFaculty);
+//app.use('/api', api);
+//app.use('/central', central);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
