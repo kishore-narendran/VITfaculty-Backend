@@ -68,13 +68,54 @@ var addSemester = function (req, res) {
     var noClassDates = req.body.non_instructional_dates;
     var startDate = req.body.startdate;
     var endDate = req.body.enddate;
+    var classDates = {
+        monday: [],
+        tuesday: [],
+        wednesday: [],
+        thursday: [],
+        friday: []
+    }
+    var lastDay = moment(endDate).add('days', 1);
+    for(var day = moment(startDate); day.diff(lastDay); day = day.add('days', 1)) {
+        if(noClassDates.indexOf(day.format('YYYY-MM-DD')) > -1) {
+            continue;
+        }
+        else if(day.day() == 0 || day.day() == 6) {
+            continue;
+        }
+        else {
+            switch(day.day()) {
+                case 1:
+                    classDates.monday.push(day.format("YYYY-MM-DD"));
+                    break;
+
+                case 2:
+                    classDates.tuesday.push(day.format("YYYY-MM-DD"));
+                    break;
+
+                case 3:
+                    classDates.wednesday.push(day.format("YYYY-MM-DD"));
+                    break;
+
+                case 4:
+                    classDates.thursday.push(day.format("YYYY-MM-DD"));
+                    break;
+
+                case 5:
+                    classDates.friday.push(day.format("YYYY-MM-DD"));
+                    break;
+            }
+        }
+    }
     var onInsertSemester = function(err, item) {
-        if(err) {}
+        if(err) {
+            res.json({result: status.failure});
+        }
         else {cos
-            res.json({'result': 'success'});
+            res.json({result: status.success});
         }
     };
-    req.db.collection('semesters').insert({'semester': semester+year, 'startdate': startDate, 'enddate': endDate}, onInsertSemester);
+    req.db.collection('semesters').insert({semester: semester, startdate: startDate, enddate: endDate, noclassdates: noClassDates, classdates: classDates}, onInsertSemester);
 };
 router.post('/addteacher', addTeacher);
 router.post('/addclass', addClass);
