@@ -36,6 +36,10 @@ var status = {
   semesterNotFound: {
     message: 'Semester not found',
     code: 13
+  },
+  dateNotFound: {
+    message: 'Date not found',
+    code: 14
   }
 }
 

@@ -152,7 +152,52 @@ var postAttendance = function(req, res) {
   }
   req.db.collection('teachers').findOne({token: token}, onFindToken);
 };
+
+var getClassAttendance = function(req, res) {
+  var classNumber = req.body.class_number;
+  var date = req.body.date;
+  var token = req.body.token;
+  var onFindClass = function(err, data) {
+    if(err) {
+      res.json({result: status.failure});
+    }
+    else if(data == null){
+      res.json({result: status.invalidClassNumber});
+    }
+    else {
+      if(date == null) {
+        res.json({result: status.success, history: data.history});
+      }
+      else {
+        var history = data.history;
+        var i;
+        for(i = 0; i < history.length; i++) {
+          if(history[i].date == date) {
+            res.json({result: status.success, date: date, present: history[i].present, absent: history[i].absent});
+            break;
+          }
+        }
+        if(i == history.length) {
+          res.json({result: status.failure});
+        }
+      }
+    }
+  }
+  var onFindToken = function(err, data) {
+    if(err) {
+      res.json({result: status.failure});
+    }
+    else if(data == null) {
+      res.json({result: status.invalidToken});
+    }
+    else {
+      req.db.collection('classes').findOne({class_number: classNumber}, onFindClass);
+    }
+  }
+  req.db.collection('teachers').findOne({token: token}, onFindToken);
+};
 router.post('/getaccesstoken', getAccessToken);
 router.post('/getclasses', getClasses);
 router.post('/postattendance', postAttendance);
+router.post('/getattendance', getClassAttendance);
 module.exports = router;
