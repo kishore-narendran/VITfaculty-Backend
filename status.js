@@ -32,6 +32,10 @@ var status = {
   invalidToken: {
     message: 'Invalid token',
     code: 12
+  },
+  semesterNotFound: {
+    message: 'Semester not found',
+    code: 13
   }
 }
 
