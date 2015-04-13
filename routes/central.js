@@ -18,8 +18,9 @@
 
 var express = require('express');
 var path = require('path');
+var moment = require('moment');
+var slots = require(path.join(__dirname, '..', 'slots'));
 var status = require(path.join(__dirname, '..', 'status'));
-
 var router = express.Router();
 
 
