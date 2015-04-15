@@ -16,14 +16,14 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
- var async = require('async');
- var express = require('express');
- var path = require('path');
+var async = require('async');
+var express = require('express');
+var path = require('path');
 
- var status = require(path.join(__dirname, '..', 'status'));
- var slots = require(path.join(__dirname, '..', 'slots'));
+var status = require(path.join(__dirname, '..', 'status'));
+var slots = require(path.join(__dirname, '..', 'slots'));
 
- var router = express.Router();
+var router = express.Router();
 
 var tokenGenerator = function(length, chars) {
     var mask = '';
@@ -46,7 +46,7 @@ var getAccessToken = function(req, res) {
         else {
             res.json({result: status.success, token: token});
         }
-    }
+    };
     var onFind = function(err, result) {
         if(err) {
             res.json({result: status.failure});
@@ -58,7 +58,7 @@ var getAccessToken = function(req, res) {
             token = tokenGenerator(6, '#aA');
             req.db.collection('teachers').update({employee_id: employeeID, password_hash: passwordHash}, {$set: {token: token}}, onUpdate)
         }
-    }
+    };
     req.db.collection('teachers').findOne({employee_id: employeeID, password_hash: passwordHash}, onFind);
 };
 
@@ -71,10 +71,10 @@ var getClasses = function(req, res) {
         else {
             res.json({result: status.success, classes: results});
         }
-    }
+    };
     var onFindClass = function (classNumber, callback) {
         req.db.collection('classes').findOne({class_number: classNumber}, callback);
-    }
+    };
     var onFind = function(err, data) {
         if(err) {
             res.json({result: status.failure});
@@ -86,118 +86,221 @@ var getClasses = function(req, res) {
             classNumbers = data.class_numbers;
             async.map(classNumbers, onFindClass, onComplete);
         }
-    }
+    };
     req.db.collection('teachers').findOne({token: token}, onFind);
 };
 
 var postAttendance = function(req, res) {
-  var token = req.body.token;
-  var date = req.body.date;
-  var classNumber = req.body.class_number;
-  var present = req.body.present;
-  var absent = req.body.absent;
-  var onUpdate = function(err, result) {
-    if(err) {
-      res.json({result: status.failure});
-    }
-    else {
-      res.json({result: status.success});
-    }
-  }
-  var onFindClass = function(err, data) {
-    if(err) {
-      res.json({result: status.failure});
-    }
-    else if(data == null) {
-      res.json({result: status.unknownClassNumber});
-    }
-    else {
-      var history = data.history;
-      var students = data.students;
-      for(var i = 0; i < history.length; i++) {
-        if(history[i].date == date) {
-          history.splice(i, 1);
-          break;
+    var token = req.body.token;
+    var date = req.body.date;
+    var classNumber = req.body.class_number;
+    var present = req.body.present;
+    var absent = req.body.absent;
+    var onUpdate = function(err, result) {
+        if(err) {
+            res.json({result: status.failure});
         }
-      }
-      history.push({date: date, present: present, absent: absent});
-      for(var i = 0; i < students.length; i++) {
-        var student = students[i];
-        if(student.attended.indexOf(date) > -1) {
-          student.attended.splice(student.attended.indexOf(date), 1);
+        else {
+            res.json({result: status.success});
         }
-      }
-      for (var i = 0; i < present.length; i++) {
-          for (var j = 0; j < students.length; j++) {
-              if (present[i] == students[j].register_number) {
-                  students[j].attended.push(date);
-              }
-          }
-      }
-      var total = data.total;
-      total += data.units;
-      req.db.collection('classes').update({class_number: classNumber}, {$set: {history: history, students: students, total: total}}, onUpdate);
-    }
-  }
-  var onFindToken = function(err, data) {
-    if(err) {
-      res.json({result: status.failure});
-    }
-    else if(data == null) {
-      res.json({result: status.invalidToken});
-    }
-    else {
-      req.db.collection('classes').findOne({class_number: classNumber}, onFindClass);
-    }
-  }
-  req.db.collection('teachers').findOne({token: token}, onFindToken);
+    };
+    var onFindClass = function(err, data) {
+        if(err) {
+            res.json({result: status.failure});
+        }
+        else if(data == null) {
+            res.json({result: status.unknownClassNumber});
+        }
+        else {
+            var history = data.history;
+            var students = data.students;
+            for(var i = 0; i < history.length; i++) {
+                if(history[i].date == date) {
+                    history.splice(i, 1);
+                    break;
+                }
+            }
+            history.push({date: date, present: present, absent: absent});
+            for(var i = 0; i < students.length; i++) {
+                var student = students[i];
+                if(student.attended.indexOf(date) > -1) {
+                    student.attended.splice(student.attended.indexOf(date), 1);
+                }
+            }
+            for (var i = 0; i < present.length; i++) {
+                for (var j = 0; j < students.length; j++) {
+                    if (present[i] == students[j].register_number) {
+                        students[j].attended.push(date);
+                    }
+                }
+            }
+            var total = data.total;
+            total += data.units;
+            req.db.collection('classes').update({class_number: classNumber}, {$set: {history: history, students: students, total: total}}, onUpdate);
+        }
+    };
+    var onFindToken = function(err, data) {
+        if(err) {
+            res.json({result: status.failure});
+        }
+        else if(data == null) {
+            res.json({result: status.invalidToken});
+        }
+        else {
+            req.db.collection('classes').findOne({class_number: classNumber}, onFindClass);
+        }
+    };
+    req.db.collection('teachers').findOne({token: token}, onFindToken);
 };
 
 var getClassAttendance = function(req, res) {
-  var classNumber = req.body.class_number;
-  var date = req.body.date;
-  var token = req.body.token;
-  var onFindClass = function(err, data) {
-    if(err) {
-      res.json({result: status.failure});
-    }
-    else if(data == null){
-      res.json({result: status.invalidClassNumber});
-    }
-    else {
-      if(date == null) {
-        res.json({result: status.success, history: data.history});
-      }
-      else {
-        var history = data.history;
-        var i;
-        for(i = 0; i < history.length; i++) {
-          if(history[i].date == date) {
-            res.json({result: status.success, date: date, present: history[i].present, absent: history[i].absent});
-            break;
-          }
+    var classNumber = req.body.class_number;
+    var date = req.body.date;
+    var token = req.body.token;
+    var onFindClass = function(err, data) {
+        if(err) {
+            res.json({result: status.failure});
         }
-        if(i == history.length) {
-          res.json({result: status.failure});
+        else if(data == null){
+            res.json({result: status.invalidClassNumber});
         }
-      }
-    }
-  }
-  var onFindToken = function(err, data) {
-    if(err) {
-      res.json({result: status.failure});
-    }
-    else if(data == null) {
-      res.json({result: status.invalidToken});
-    }
-    else {
-      req.db.collection('classes').findOne({class_number: classNumber}, onFindClass);
-    }
-  }
-  req.db.collection('teachers').findOne({token: token}, onFindToken);
+        else {
+            if(date == null) {
+                res.json({result: status.success, history: data.history});
+            }
+            else {
+                var history = data.history;
+                var i;
+                for(i = 0; i < history.length; i++) {
+                    if(history[i].date == date) {
+                        res.json({result: status.success, date: date, present: history[i].present, absent: history[i].absent});
+                        break;
+                    }
+                }
+                if(i == history.length) {
+                    res.json({result: status.failure});
+                }
+            }
+        }
+    };
+    var onFindToken = function(err, data) {
+        if(err) {
+            res.json({result: status.failure});
+        }
+        else if(data == null) {
+            res.json({result: status.invalidToken});
+        }
+        else {
+            req.db.collection('classes').findOne({class_number: classNumber}, onFindClass);
+        }
+    };
+    req.db.collection('teachers').findOne({token: token}, onFindToken);
+};
+
+var getTimeTable = function(req, res) {
+    var token = req.body.token;
+    var timetable = {
+        monday:Array.apply(null, new Array(12)).map(Number.prototype.valueOf,0),
+        tuesday: Array.apply(null, new Array(12)).map(Number.prototype.valueOf,0),
+        wednesday: Array.apply(null, new Array(12)).map(Number.prototype.valueOf,0),
+        thursday: Array.apply(null, new Array(12)).map(Number.prototype.valueOf,0),
+        friday: Array.apply(null, new Array(12)).map(Number.prototype.valueOf,0)
+    };
+    var onComplete = function(err, classes) {
+        if(err) {
+            res.json({result: status.failure});
+        }
+        else {
+            var timetableSchema = slots;
+            for(var i = 0; i < classes.length; i++) {
+                var x;
+                var slot = classes[i].slot;
+                var tutorialFlag = slot.indexOf('+') == -1;
+                var classNumber = classes[i].class_number;
+                if (slot.indexOf('L') > -1) {
+                    var re = /\d+/g;
+                    var labSlots = slot.match(re);
+                    for (var j = 0; j < labSlots.length; j++) {
+                        var labSlot = labSlots[j];
+                        console.log(labSlot);
+                        if ((x = timetableSchema.lab.monday.indexOf(labSlot)) != -1) {
+                            timetable.monday[x] = classNumber;
+                        }
+                        if ((x = timetableSchema.lab.tuesday.indexOf(labSlot)) != -1) {
+                            timetable.tuesday[x] = classNumber;
+                        }
+                        if ((x = timetableSchema.lab.wednesday.indexOf(labSlot)) != -1) {
+                            timetable.wednesday[x] = classNumber;
+                        }
+                        if ((x = timetableSchema.lab.thursday.indexOf(labSlot)) != -1) {
+                            timetable.thursday[x] = classNumber;
+                        }
+                        if ((x = timetableSchema.lab.friday.indexOf(labSlot)) != -1) {
+                            timetable.friday[x] = classNumber;
+                        }
+                    }
+
+                }
+                else {
+                    slot = slot.split('+')[0];
+                    if ((x = timetableSchema.theory.monday.indexOf(slot)) != -1) {
+                        timetable.monday[x] = classNumber;
+                    }
+                    if ((x = timetableSchema.theory.tuesday.indexOf(slot)) != -1) {
+                        timetable.tuesday[x] = classNumber;
+                    }
+                    if ((x = timetableSchema.theory.wednesday.indexOf(slot)) != -1) {
+                        timetable.wednesday[x] = classNumber;
+                    }
+                    if ((x = timetableSchema.theory.thursday.indexOf(slot)) != -1) {
+                        timetable.thursday[x] = classNumber;
+                    }
+                    if ((x = timetableSchema.theory.friday.indexOf(slot)) != -1) {
+                        timetable.friday[x] = classNumber;
+                    }
+                }
+                if (tutorialFlag) {
+                    slot = 'T' + slot;
+                    console.log("Check");
+                    if ((x = timetableSchema.theory.monday.indexOf(slot)) != -1) {
+                        timetable.monday[x] = classNumber;
+                    }
+                    if ((x = timetableSchema.theory.tuesday.indexOf(slot)) != -1) {
+                        timetable.tuesday[x] = classNumber;
+                    }
+                    if ((x = timetableSchema.theory.wednesday.indexOf(slot)) != -1) {
+                        timetable.wednesday[x] = classNumber;
+                    }
+                    if ((x = timetableSchema.theory.thursday.indexOf(slot)) != -1) {
+                        timetable.thursday[x] = classNumber;
+                    }
+                    if ((x = timetableSchema.theory.friday.indexOf(slot)) != -1) {
+                        timetable.friday[x] = classNumber;
+                    }
+                }
+            }
+            res.json({result: status.success, timetable: timetable});
+        }
+    };
+    var onFindClassInfo = function(classNumber, callback) {
+        req.db.collection('classes').findOne({class_number: classNumber}, callback)
+    };
+    var onFindTeacher = function(err, data) {
+        if(err) {
+            res.json({result: status.failure});
+        }
+        else if(data == null) {
+            res.json({result: status.invalidToken});
+        }
+        else {
+            async.map(data.class_numbers, onFindClassInfo, onComplete);
+        }
+    };
+    req.db.collection('teachers').findOne({token: token}, onFindTeacher);
 };
 router.post('/getaccesstoken', getAccessToken);
 router.post('/getclasses', getClasses);
 router.post('/postattendance', postAttendance);
 router.post('/getattendance', getClassAttendance);
+router.post('/gettimetable', getTimeTable);
 module.exports = router;

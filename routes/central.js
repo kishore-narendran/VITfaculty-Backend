@@ -102,17 +102,17 @@ var addClass = function (req, res) {
                 classDays.push.apply(classDays, classDates[day]);
             }
             for(var i = 0; i < classDays.length; i++) {
-              for(var j = 0; j < classDays.length - 1 - i; j++) {
-                if(moment(classDays[j]).diff(moment(classDays[j+1])) > 0) {
-                  var temp = classDays[j];
-                  classDays[j] = classDays[j+1];
-                  classDays[j+1] = temp;
+                for(var j = 0; j < classDays.length - 1 - i; j++) {
+                    if(moment(classDays[j]).diff(moment(classDays[j+1])) > 0) {
+                        var temp = classDays[j];
+                        classDays[j] = classDays[j+1];
+                        classDays[j+1] = temp;
+                    }
                 }
-              }
             }
             req.db.collection('classes').insert({cnum: cnum, students: students, name: name, code: code, slot: slot, venue: venue, units: units, classdates: classDays, type: type, total: 0}, onInsert);
         }
-    }
+    };
     req.db.collection('semesters').findOne({semester: semester}, onSemesterFind);
 
 };
@@ -127,7 +127,7 @@ var addSemester = function (req, res) {
         wednesday: [],
         thursday: [],
         friday: []
-    }
+    };
     var lastDay = moment(endDate).add('days', 1);
     for(var day = moment(startDate); day.diff(lastDay); day = day.add('days', 1)) {
         if(noClassDates.indexOf(day.format('YYYY-MM-DD')) > -1) {

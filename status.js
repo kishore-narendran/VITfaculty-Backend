@@ -17,30 +17,30 @@
  */
 
 var status = {
-  success: {
-    message: 'Successful execution',
-    code: 1
-  },
-  failure: {
-    message: 'Failure',
-    code: 0
-  },
-  incorrectCredentials: {
-    message: 'Incorrect credentials',
-    code: 11
-  },
-  invalidToken: {
-    message: 'Invalid token',
-    code: 12
-  },
-  semesterNotFound: {
-    message: 'Semester not found',
-    code: 13
-  },
-  dateNotFound: {
-    message: 'Date not found',
-    code: 14
-  }
-}
+    success: {
+        message: 'Successful execution',
+        code: 1
+    },
+    failure: {
+        message: 'Failure',
+        code: 0
+    },
+    incorrectCredentials: {
+        message: 'Incorrect credentials',
+        code: 11
+    },
+    invalidToken: {
+        message: 'Invalid token',
+        code: 12
+    },
+    semesterNotFound: {
+        message: 'Semester not found',
+        code: 13
+    },
+    dateNotFound: {
+        message: 'Date not found',
+        code: 14
+    }
+};
 
 module.exports = status;

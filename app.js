@@ -34,15 +34,13 @@ var log;
 if (process.env.LOGENTRIES_TOKEN) {
     var logentries = require('node-logentries');
     log = logentries.logger({
-                                token: process.env.LOGENTRIES_TOKEN
-                            });
+        token: process.env.LOGENTRIES_TOKEN
+    });
 }
 
 var routes = require(path.join(__dirname, 'routes', 'index'));
-var central = require(path.join(__dirname, 'routes', 'central'));
 var apiCentral = require(path.join(__dirname, 'routes', 'api-central'));
 var apiClientFaculty = require(path.join(__dirname, 'routes', 'api-client-faculty'));
-var api = require(path.join(__dirname, 'routes', 'api'));
 
 var app = express();
 

@@ -33,7 +33,7 @@ var randomString = function(length, chars) {
     var result = '';
     for (var i = length; i > 0; --i) result += mask[Math.round(Math.random() * (mask.length - 1))];
     return result;
-}
+};
 
 var checkDateBefore = function (date1, date2) {
     var year1 = date1.getFullYear();
@@ -68,7 +68,7 @@ var getDateString = function (datevar) {
     else
         stringDate = stringDate+"-"+date.toString();
     return stringDate;
-}
+};
 
 var getAccessToken = function (req, res) {
     var empid = req.body.empid;
@@ -193,7 +193,7 @@ var getClassAttendanceByDate = function (req, res) {
                 }
             }
             if(i == history.length) {
-              res.json({result: status.failure});
+                res.json({result: status.failure});
             }
         }
     };
@@ -628,7 +628,7 @@ var getDates = function(req, res) {
                     break;
                 default:
                     slot = slot.split("L");
-                    var labdays = {monday: false, tuesday: false, wednesday: false, thursday: false, friday: false}
+                    var labdays = {monday: false, tuesday: false, wednesday: false, thursday: false, friday: false};
                     for(var i = 0; i < slot.length; i++) {
                         slot[i] = slot[i].replace("+", "");
                         slot[i] = slot[i].replace(" ", "");
