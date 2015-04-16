@@ -30,7 +30,6 @@ var addTeacher = function (req, res) {
     var password = req.body.password;
     var salt = bcrypt.genSaltSync();
     var passwordHash = bcrypt.hashSync(password, salt);
-    console.log(passwordHash);
     var classNumbers = req.body.class_numbers;
     var onInsert = function (err, records) {
         if (err) {
