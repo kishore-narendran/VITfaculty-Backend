@@ -19,6 +19,7 @@
 var express = require('express');
 var path = require('path');
 var moment = require('moment');
+var bcrypt = require('bcrypt');
 var slots = require(path.join(__dirname, '..', 'slots'));
 var status = require(path.join(__dirname, '..', 'status'));
 var router = express.Router();
@@ -26,7 +27,10 @@ var router = express.Router();
 
 var addTeacher = function (req, res) {
     var employeeID = req.body.employee_id;
-    var passwordHash = req.body.password_hash;
+    var password = req.body.password;
+    var salt = bcrypt.genSaltSync();
+    var passwordHash = bcrypt.hashSync(password, salt);
+    console.log(passwordHash);
     var classNumbers = req.body.class_numbers;
     var onInsert = function (err, records) {
         if (err) {
@@ -36,7 +40,7 @@ var addTeacher = function (req, res) {
             res.json({result: status.success});
         }
     };
-    req.db.collection('teachers').insert({employee_id: employeeID, password_hash: passwordHash, class_numbers: classNumbers}, onInsert);
+    req.db.collection('teachers').update({employee_id: employeeID}, {$set:{employee_id: employeeID, password_hash: passwordHash, class_numbers: classNumbers}}, {upsert: true}, onInsert);
 };
 
 var addClass = function (req, res) {
@@ -113,7 +117,7 @@ var addClass = function (req, res) {
                     }
                 }
             }
-            req.db.collection('classes').insert({class_number: classNumber, students: students, title: title, code: code, slot: slot, venue: venue, units: units, class_dates: classDates, type: type, total: 0, history: [], exams: []}, onInsert);
+            req.db.collection('classes').update({class_number: classNumber}, {$set: {class_number: classNumber, students: students, title: title, code: code, slot: slot, venue: venue, units: units, class_dates: classDates, type: type, total: 0, history: [], exams: []}}, {upsert: true}, onInsert);
         }
     };
     req.db.collection('semesters').findOne({semester: semester}, onSemesterFind);
@@ -172,7 +176,7 @@ var addSemester = function (req, res) {
             res.json({result: status.success});
         }
     };
-    req.db.collection('semesters').insert({semester: semester, start_date: startDate, end_date: endDate, non_instructional_dates: noClassDates, class_dates: classDates}, onInsertSemester);
+    req.db.collection('semesters').update({semester: semester}, {$set: {semester: semester, start_date: startDate, end_date: endDate, non_instructional_dates: noClassDates, class_dates: classDates}}, {upsert: true}, onInsertSemester);
 };
 
 router.post('/addteacher', addTeacher);
