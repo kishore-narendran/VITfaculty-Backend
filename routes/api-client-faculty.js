@@ -18,6 +18,7 @@
 
 var async = require('async');
 var express = require('express');
+var bcrypt = require('bcrypt');
 var path = require('path');
 
 var status = require(path.join(__dirname, '..', 'status'));
@@ -37,7 +38,7 @@ var tokenGenerator = function(length, chars) {
 
 var getAccessToken = function(req, res) {
     var employeeID = req.body.employee_id;
-    var passwordHash = req.body.password_hash;
+    var password = req.body.password;
     var token;
     var onUpdate = function(err, result) {
         if(err) {
@@ -47,19 +48,19 @@ var getAccessToken = function(req, res) {
             res.json({result: status.success, token: token});
         }
     };
-    var onFind = function(err, result) {
+    var onFind = function(err, data) {
         if(err) {
             res.json({result: status.failure});
         }
-        else if(result == null){
-            res.json({result: status.incorrectCredentials});
+        else if (bcrypt.compareSync(password, data.password_hash)) {
+            token = tokenGenerator(6, '#aA');
+            req.db.collection('teachers').update({employee_id: employeeID}, {$set: {token: token}}, {upsert: true}, onUpdate);
         }
         else {
-            token = tokenGenerator(6, '#aA');
-            req.db.collection('teachers').update({employee_id: employeeID, password_hash: passwordHash}, {$set: {token: token}}, onUpdate)
+            res.json({result: status.incorrectCredentials});
         }
     };
-    req.db.collection('teachers').findOne({employee_id: employeeID, password_hash: passwordHash}, onFind);
+    req.db.collection('teachers').findOne({employee_id: employeeID}, onFind);
 };
 
 var getClasses = function(req, res) {
