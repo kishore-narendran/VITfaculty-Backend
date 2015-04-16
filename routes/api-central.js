@@ -113,7 +113,7 @@ var addClass = function (req, res) {
                     }
                 }
             }
-            req.db.collection('classes').insert({class_number: classNumber, students: students, title: title, code: code, slot: slot, venue: venue, units: units, class_dates: classDates, type: type, total: 0, history: []}, onInsert);
+            req.db.collection('classes').insert({class_number: classNumber, students: students, title: title, code: code, slot: slot, venue: venue, units: units, class_dates: classDates, type: type, total: 0, history: [], exams: []}, onInsert);
         }
     };
     req.db.collection('semesters').findOne({semester: semester}, onSemesterFind);

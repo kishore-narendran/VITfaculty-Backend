@@ -215,14 +215,13 @@ var getTimeTable = function(req, res) {
             for(var i = 0; i < classes.length; i++) {
                 var x;
                 var slot = classes[i].slot;
-                var tutorialFlag = slot.indexOf('+') == -1;
+                var tutorialFlag = (slot.indexOf('+') != -1 && slot.indexOf('L') == -1);
                 var classNumber = classes[i].class_number;
                 if (slot.indexOf('L') > -1) {
                     var re = /\d+/g;
                     var labSlots = slot.match(re);
                     for (var j = 0; j < labSlots.length; j++) {
                         var labSlot = labSlots[j];
-                        console.log(labSlot);
                         if ((x = timetableSchema.lab.monday.indexOf(labSlot)) != -1) {
                             timetable.monday[x] = classNumber;
                         }
@@ -261,7 +260,6 @@ var getTimeTable = function(req, res) {
                 }
                 if (tutorialFlag) {
                     slot = 'T' + slot;
-                    console.log("Check");
                     if ((x = timetableSchema.theory.monday.indexOf(slot)) != -1) {
                         timetable.monday[x] = classNumber;
                     }
@@ -298,9 +296,84 @@ var getTimeTable = function(req, res) {
     };
     req.db.collection('teachers').findOne({token: token}, onFindTeacher);
 };
+
+var postMarks = function(req, res) {
+    var type = req.body.type;
+    var classNumber = req.body.class_number;
+    var marks = req.body.marks;
+    var token = req.body.token;
+    var onUpdate = function(err, result) {
+        if(err) {
+            res.json({result: status.failure});
+        }
+        else {
+            res.json({result: status.success});
+        }
+    };
+    var onFindClass = function(err, data) {
+        if(err) {
+            res.json({result: status.failure});
+        }
+        else if(data == null) {
+            res.json({result: status.unknownClassNumber});
+        }
+        else {
+            var students = data.students;
+            var exams = data.exams;
+            for(var i = 0; i < marks.length; i++) {
+                for(var j = 0; j < students.length; j++) {
+                    if(marks[i].register_number == students[j].register_number) {
+                        students[j][type] = marks[i][type];
+                        break;
+                    }
+                }
+            }
+            exams.push(type);
+            req.db.collection('classes').update({class_number: classNumber}, {$set: {students: students, exams: exams}}, onUpdate);
+        }
+    };
+    var onFindToken = function(err, data) {
+        if(err) {
+            res.json({result: status.failure});
+        }
+        else if(data == null) {
+            res.json({result: status.invalidToken});
+        }
+        else {
+            req.db.collection('classes').findOne({class_number: classNumber}, onFindClass);
+        }
+    };
+    req.db.collection('teachers').findOne({token: token}, onFindToken);
+};
+
+var getMarks = function(req, res) {
+    var type = req.body.type;
+    var classNumber = req.body.class_number;
+    var onFindClass = function(err, data) {
+        if(err) {
+            res.json({result: status.failure});
+        }
+        else if(data == null){
+            res.json({result: status.unknownClassNumber});
+        }
+        else {
+            var students = data.students;
+            var marks = [];
+            for(var i = 0; i < students.length; i++) {
+                var x = {register_number: students[i].register_number};
+                x[type] = students[i][type];
+                marks.push(x);
+            }
+            res.json({class_number: classNumber, type: type, marks: marks, result: status.success});
+        }
+    };
+    req.db.collection('classes').findOne({class_number: classNumber}, onFindClass);
+};
 router.post('/getaccesstoken', getAccessToken);
 router.post('/getclasses', getClasses);
 router.post('/postattendance', postAttendance);
 router.post('/getattendance', getClassAttendance);
 router.post('/gettimetable', getTimeTable);
+router.post('/postmarks', postMarks);
+router.post('/getmarks', getMarks);
 module.exports = router;

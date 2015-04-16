@@ -40,6 +40,10 @@ var status = {
     dateNotFound: {
         message: 'Date not found',
         code: 14
+    },
+    unknownClassNumber: {
+        message: 'Unknown class number',
+        code: 15
     }
 };
 
